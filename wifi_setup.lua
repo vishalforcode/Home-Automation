@@ -37,7 +37,7 @@ tmr.alarm(0, 1000, 1, function()
         
         tmr.stop(0)     -- Stop the polling loop
 
-       dofile("mqtt.lua")
+       dofile("mqtt_pubsub.lua")
        makeConn()
     end
     

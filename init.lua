@@ -26,7 +26,7 @@ return
 end
 -- otherwise, start up
 print("in startup")
-dofile("test.lua")
+dofile("wifi_setup.lua")
 end
 
 tmr.alarm(0,1000,0,abortInit) -- call abortInit after 1s

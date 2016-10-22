@@ -1,20 +1,21 @@
 sensorID = "status"    -- a sensor identifier for this device
-tgtHost = "broker.hivemq.com" -- target host (broker)
+tgtHost = "iot.eclipse.org" -- target host (broker)
 tgtPort = 1883          -- target port (broker listening on)
 mqttUserID = "MQTT_USER_ID"     -- account to use to log into the broker
 mqttPass = "MQTT_USER_PASSWORD"     -- broker account password
 mqttTimeOut = 120       -- connection timeout
-dataInt = 3         -- data transmission interval in seconds
+dataInt = 10         -- data transmission interval in seconds
 topicQueue = "/readEsp8266"-- the MQTT topic queue to use
-
+pin = 1
 
 -- Function pubEvent() publishes the sensor value to the defined queue.
 function pubEvent()
-    rv = gpio.read(1)  -- read sensor
-    print (rv)
-    pubValue = sensorID .. ":" .. rv        -- build buffer
-    print("Publishing to " .. topicQueue .. ": " .. pubValue)   -- print a status message
-    mqttBroker:publish(topicQueue, pubValue, 0, 0)  -- publish
+    print("Publish Event")
+   -- rv = gpio.read(1)  -- read sensor
+   -- print (rv)
+   -- pubValue = sensorID .. ":" .. rv        -- build buffer
+   -- print("Publishing to " .. topicQueue .. ": " .. pubValue)   -- print a status message
+   -- mqttBroker:publish(topicQueue, pubValue, 0, 0)  -- publish
     
 end
 
@@ -38,32 +39,35 @@ function conn()
     mqttBroker:connect(tgtHost, tgtPort, 0, 1,function(client) 
         print ("connected") 
         subscribe() 
-        end, function(client, reason) print("failed reason: "..reason) end)
+        end, function(client, reason) print("failed reason: " .. reason) end)
 end
 
 function performTask(topic,data)
-    if(topic == "/control/led" and data == "off")
+    if(topic == "/control/led" and data == "OFF")
     then
-    pin=0
-    gpio.mode(pin, gpio.OUTPUT,gpio.PULLUP)
-    gpio.write(pin, gpio.HIGH)
-    elseif(topic == "/control/led" and data == "on")
-    then
-    pin=0
     gpio.mode(pin, gpio.OUTPUT,gpio.PULLUP)
     gpio.write(pin, gpio.LOW)
-    elseif(topic == "/control/led" and data == "status")
+    elseif(topic == "/control/led" and data == "ON")
     then
-    pin=0
-   -- gpio.mode(pin, gpio.OUTPUT,gpio.PULLUP) --Not Needed
+    gpio.mode(pin, gpio.OUTPUT,gpio.PULLUP)
+    gpio.write(pin, gpio.HIGH)
+    elseif(topic == "/control/led" and data == "RESET")
+    then
+    node.restart()
+    elseif(topic == "/control/led" and data == "STATUS")
+    then
     status = gpio.read(pin)
-    print(status)
-    if status == 1
+    print("status" .. status)
+    if status == 0
     then 
-    mqttBroker:publish(topicQueue, "led_pin:off", 0, 0)  -- publish
-    elseif status == 0
+    mqttBroker:publish(topicQueue, "led_pin:off", 2, 0,function(client) -- publish
+        print("published")
+        end)
+    elseif status == 1
     then
-     mqttBroker:publish(topicQueue, "led_pin:on", 0, 0)  -- publish
+     mqttBroker:publish(topicQueue, "led_pin:on", 2, 0,function(client)-- publish
+        print("published")
+        end)
     else
     print("Do Nothing")
     end
