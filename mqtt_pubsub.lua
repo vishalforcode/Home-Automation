@@ -4,20 +4,11 @@ tgtPort = 1883          -- target port (broker listening on)
 mqttUserID = "MQTT_USER_ID"     -- account to use to log into the broker
 mqttPass = "MQTT_USER_PASSWORD"     -- broker account password
 mqttTimeOut = 120       -- connection timeout
-dataInt = 10         -- data transmission interval in seconds
+dataInt = 1         -- data transmission interval in seconds
 topicQueue = "/readEsp8266"-- the MQTT topic queue to use
 pin = 1
 
--- Function pubEvent() publishes the sensor value to the defined queue.
-function pubEvent()
-    print("Publish Event")
-   -- rv = gpio.read(1)  -- read sensor
-   -- print (rv)
-   -- pubValue = sensorID .. ":" .. rv        -- build buffer
-   -- print("Publishing to " .. topicQueue .. ": " .. pubValue)   -- print a status message
-   -- mqttBroker:publish(topicQueue, pubValue, 0, 0)  -- publish
-    
-end
+local nmea = require "nmea"
 
 -- Subscribe to a topic
 function subscribe()
@@ -39,6 +30,7 @@ function conn()
     mqttBroker:connect(tgtHost, tgtPort, 0, 1,function(client) 
         print ("connected") 
         subscribe() 
+        gps()
         end, function(client, reason) print("failed reason: " .. reason) end)
 end
 
@@ -95,9 +87,38 @@ function makeConn()
     performTask(topic,data)
     end
 end)
- 
     -- Connect to the Broker
     conn()
- 
-    tmr.alarm(0, (dataInt * 1000), 1, pubEvent)
 end
+
+function gps()
+    -- setup GPS Reciever
+    uart.setup(0, 9600, 8, uart.PARITY_NONE, uart.STOPBITS_1, 1)
+    handleGPS()
+end
+
+function handleGPS()
+    print("GPS Data")
+    uart.on("data", 255,
+        function(data)
+        print("receive from uart:", data)
+       --  repeat
+      --  local data1 = split(data,",")
+      --  local result = nmea.decode(data1)
+       -- print("decoded data : ")
+        mqttBroker:publish(topicQueue, data, 2, 0) 
+      --  for k,v in pairs(result) 
+      --  do 
+      --  print(k.." => "..v)
+       -- mqttBroker:publish(topicQueue, k .. "=" .. v, 2, 0)  -- publish
+       -- end
+   -- until false
+   -- print("decoded")
+        if data=="quit" then
+        uart.on("data") -- unregister callback function
+        end
+    end, 0)
+end
+   
+
+
