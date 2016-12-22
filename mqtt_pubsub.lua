@@ -38,11 +38,11 @@ function performTask(topic,data)
     if(topic == "/control/led" and data == "OFF")
     then
     gpio.mode(pin, gpio.OUTPUT,gpio.PULLUP)
-    gpio.write(pin, gpio.LOW)
+    gpio.write(pin, gpio.HIGH)
     elseif(topic == "/control/led" and data == "ON")
     then
     gpio.mode(pin, gpio.OUTPUT,gpio.PULLUP)
-    gpio.write(pin, gpio.HIGH)
+    gpio.write(pin, gpio.LOW)
     elseif(topic == "/control/led" and data == "RESET")
     then
     node.restart()
@@ -52,12 +52,12 @@ function performTask(topic,data)
     print("status" .. status)
     if status == 0
     then 
-    mqttBroker:publish(topicQueue, "led_pin:off", 2, 0,function(client) -- publish
+    mqttBroker:publish(topicQueue, "led_pin:on", 2, 0,function(client) -- publish
         print("published")
         end)
     elseif status == 1
     then
-     mqttBroker:publish(topicQueue, "led_pin:on", 2, 0,function(client)-- publish
+     mqttBroker:publish(topicQueue, "led_pin:off", 2, 0,function(client)-- publish
         print("published")
         end)
     else
